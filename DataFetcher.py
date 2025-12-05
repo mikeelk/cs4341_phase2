@@ -34,7 +34,7 @@ class DataFetcher:
         Short Float: % of shares which are currently short sold
         Short Ratio: Days needed for short sellers to buy back position
         Short Interest: Total number of short sold shares
-        Rel Vol: FinViz attention metric
+        Rel Vol: FinViz attention metric current vol/ avg
         Volatility W/M: weekly/monthly volatility
         ATR(14): another volatilty metric
         Change: stock price change for today only
@@ -46,13 +46,11 @@ class DataFetcher:
         
         stock = finvizfinance(self.ticker_symbol.lower()) #finviz object for stock
 
-        news = stock.ticker_news() #get news headlines
-
         fun = stock.ticker_fundament() #get the other datapoints
-        print(fun)
+ 
         data = [fun["Short Float"], fun["Short Ratio"], fun["Short Interest"], fun["Rel Volume"], fun["Change"], fun["Volatility W"], fun["Volatility M"], fun["ATR (14)"]]
 
-        return news, data
+        return data
 
 
 
@@ -71,15 +69,16 @@ class DataFetcher:
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         }
         
+
         url = f"https://www.reddit.com/search.json?q={self.ticker_symbol}&limit=30" #url
 
-        data = requests.get(url, headers=headers).json() #make request and get json of body
+        data = requests.get(url, headers=headers)
+
         
         return data
 
 
     
-
 
 
 
