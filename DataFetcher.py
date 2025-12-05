@@ -28,8 +28,7 @@ class DataFetcher:
 
 
     """
-    Queries FinViz api to fetch recent news headlines and short information related to requested stock
-    headlines can be analyzed for sentiment, and short info can reveal how the public views the stock
+    Queries FinViz api to fetch information related to requested stock
 
     Datapoints:
         Short Float: % of shares which are currently short sold
@@ -80,20 +79,6 @@ class DataFetcher:
 
 
     
-
-def main():
-
-    client = DataFetcher("AAPL")
-
-    print(client.fetch_finviz()) #test functions here
-
-
-    
-
-
-if __name__ == "__main__":
-    main()
-
 
 
 
