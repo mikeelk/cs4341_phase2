@@ -1,11 +1,16 @@
 from DataFetcher import *
 from DataParser import *
 from Regressor import *
+from flask import Flask, request, jsonify
 
 
-def main():
+def main(initdata=None):
 
-    ticker = input("Which stock would you like to analyze? ")
+    if initdata is None:
+        ticker = input("Which stock would you like to analyze? ")
+
+    else:
+        ticker = str(initdata)
 
     fetcher = DataFetcher(ticker)
     
@@ -21,10 +26,38 @@ def main():
     pop_score, rmse, r2 = regressor.predict_query(data)
 
     print(data)
-    print(pop_score)
+    print("score", pop_score)
+    return pop_score
 
 
+# if __name__ == "__main__":
+#     main()
+
+app = Flask(__name__)
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  # dev only
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    return response
 
 
-if __name__ == "__main__":
-    main()
+@app.route("/PYapp", methods=["POST"])
+def PYapp():
+    data = request.get_json()
+    print(data)
+    ticker = data.get("ticker") if data else None
+    if ticker is None or len(ticker) > 4:
+        return 400
+    else:
+        result = main(ticker)
+
+    print(result)
+
+    return jsonify({"score": result})
+
+
+app.run(debug=True)
+
+

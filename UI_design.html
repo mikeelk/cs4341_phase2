@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stock Popularity Scanner</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#95a0b8;
+      --accent:#7dd3fc;
+      --accent-2:#60a5fa;
+      --good:#34d399;
+      --bad:#fb7185;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background: linear-gradient(180deg,#071024 0%, #07151f 100%);
+      color:#e6eef8;
+    }
+    .container{
+      max-width:700px;
+      margin:28px auto;
+      padding:24px;
+      box-sizing:border-box;
+    }
+    header{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      margin-bottom:20px;
+    }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .logo{
+      width:56px;
+      height:56px;
+      border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      color:#042a3b;
+      box-shadow:0 6px 18px rgba(0,0,0,0.6);
+      font-size:20px;
+    }
+    h1{
+      font-size:20px;
+      margin:0;
+    }
+    .lead{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top:10px;
+    }
+    .search-box{
+      background:var(--card);
+      border-radius:12px;
+      padding:12px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      box-shadow:0 6px 20px rgba(5,8,15,0.6);
+    }
+    .search-box input{
+      background:transparent;
+      border:0;
+      outline:0;
+      color:inherit;
+      font-size:16px;
+      width:190px;
+    }
+    .btn{
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      border:0;
+      padding:8px 14px;
+      border-radius:10px;
+      color:#042a3b;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 6px 18px rgba(33,150,243,0.12);
+    }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .card{
+      background:linear-gradient(180deg,var(--card),var(--glass));
+      padding:18px;
+      border-radius:var(--radius);
+      box-shadow:0 8px 30px rgba(2,6,12,0.6);
+      margin-top:20px;
+    }
+    .score{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .big-score{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+    .meter{
+      width:120px;
+      height:120px;
+      border-radius:999px;
+      background:conic-gradient(var(--accent) 0% 55%, rgba(255,255,255,0.06) 55% 100%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: inset 0 -8px 30px rgba(0,0,0,0.4);
+      font-weight:700;
+      font-size:28px;
+      color:#ffffff;
+    }
+    .score-meta{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .score-meta h2{
+      margin:0;
+      font-size:18px;
+    }
+    .score-meta p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .badge{
+      display:inline-block;
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.04);
+      font-weight:600;
+      font-size:12px;
+      color:var(--muted);
+      margin-left:6px;
+    }
+    @media (max-width:600px){
+      .big-score{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div>
+          <h1>Stock Popularity Scanner</h1>
+          <p class="lead">Compute a single popularity score (0–100) for a stock symbol.</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="search-box card">
+        <label style="font-size:12px;color:var(--muted);min-width:36px;">Symbol</label>
+        <input id="symbolInput" placeholder="e.g., NVDA or TSLA" value="NVDA" />
+        <button id="analyzeBtn" class="btn">Analyze</button>
+      </div>
+    </div>
+
+    <div class="card score">
+      <div class="big-score">
+        <div id="meter" class="meter">--</div>
+        <div class="score-meta">
+          <h2 id="stockTitle">NVDA</h2>
+          <p id="scoreText">
+            Popularity Score
+            <span class="badge" id="scoreBadge">—</span>
+          </p>
+          <p class="small" id="scoreDesc">
+            Enter a symbol and press Analyze to compute the popularity score (0–100).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function renderMeter(score){
+      const meter = document.getElementById('meter');
+      const badge = document.getElementById('scoreBadge');
+      const desc = document.getElementById('scoreDesc');
+
+      const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : 0;
+
+      meter.textContent = safeScore;
+      badge.textContent = safeScore;
+
+      let color;
+      if (safeScore > 65) {
+        color = 'var(--good)';
+        desc.textContent = 'Strong popularity — likely driven by genuine, sustained attention.';
+      } else if (safeScore < 40) {
+        color = 'var(--bad)';
+        desc.textContent = 'Low or noisy popularity — could be short-lived hype or weak interest.';
+      } else {
+        color = 'var(--accent)';
+        desc.textContent = 'Moderate popularity — mixed signals, worth a deeper look at the drivers.';
+      }
+
+      meter.style.background =
+        `conic-gradient(${color} 0% ${safeScore}%, rgba(255,255,255,0.06) ${safeScore}% 100%)`;
+    }
+
+    async function analyzeSymbol(sym){
+      const s = (sym || 'NVDA').toUpperCase().trim();
+      document.getElementById('stockTitle').textContent = s;
+
+      try {
+        const res = await fetch('http://127.0.0.1:5000/PYapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticker: s })
+        });
+
+        if (!res.ok) {
+          console.error('Backend error status:', res.status);
+          renderMeter(0);
+          document.getElementById('scoreDesc').textContent =
+            'Error from backend (status ' + res.status + ').';
+          return;
+        }
+
+        const data = await res.json();
+        console.log('Python response:', data);
+
+        const score = data.score; // your Flask returns: jsonify({"score": result})
+        renderMeter(score);
+      } catch (err) {
+        console.error('Fetch failed:', err);
+        renderMeter(0);
+        document.getElementById('scoreDesc').textContent =
+          'Could not reach backend. Check that the Python server is running.';
+      }
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', () => {
+      const val = document.getElementById('symbolInput').value;
+      analyzeSymbol(val);
+    });
+
+    analyzeSymbol(document.getElementById('symbolInput').value);
+  </script>
+</body>
+</html>

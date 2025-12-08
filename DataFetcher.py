@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 """
 Pulls data on queried stock from google trends, finviz, and reddit 
 """
+
+
 class DataFetcher:
 
     #init data fetcher object for a specific stock (ticker_symbol)
