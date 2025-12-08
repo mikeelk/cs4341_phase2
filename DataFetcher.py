@@ -1,7 +1,7 @@
 from pytrends.request import TrendReq
 from finvizfinance.quote import finvizfinance
 import requests
-
+from datetime import datetime, timedelta
 """
 Pulls data on queried stock from google trends, finviz, and reddit 
 """
@@ -19,8 +19,12 @@ class DataFetcher:
     def fetch_trends(self): 
         pytrends = TrendReq(hl='en-US', tz=360) 
         kw_list = [self.ticker_symbol] 
+
+        yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+        one_month_ago = (datetime.today() - timedelta(days=31)).strftime("%Y-%m-%d")
+
         
-        pytrends.build_payload(kw_list, cat=0, timeframe='today 1-m', geo='', gprop='') 
+        pytrends.build_payload(kw_list, cat=0, timeframe=' '.join([one_month_ago, yesterday]), geo='', gprop='') 
         
         data = pytrends.interest_over_time()
         
@@ -34,7 +38,7 @@ class DataFetcher:
         Short Float: % of shares which are currently short sold
         Short Ratio: Days needed for short sellers to buy back position
         Short Interest: Total number of short sold shares
-        Rel Vol: FinViz attention metric current vol/ avg
+        Rel Vol: FinViz attention metric
         Volatility W/M: weekly/monthly volatility
         ATR(14): another volatilty metric
         Change: stock price change for today only
@@ -47,7 +51,7 @@ class DataFetcher:
         stock = finvizfinance(self.ticker_symbol.lower()) #finviz object for stock
 
         fun = stock.ticker_fundament() #get the other datapoints
- 
+
         data = [fun["Short Float"], fun["Short Ratio"], fun["Short Interest"], fun["Rel Volume"], fun["Change"], fun["Volatility W"], fun["Volatility M"], fun["ATR (14)"]]
 
         return data
@@ -65,20 +69,18 @@ class DataFetcher:
         #http headers
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.9",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         }
         
-
         url = f"https://www.reddit.com/search.json?q={self.ticker_symbol}&limit=30" #url
 
-        data = requests.get(url, headers=headers)
-
+        data = requests.get(url, headers=headers).json() #make request and get json of body
         
         return data
 
 
     
+
 
 
 
