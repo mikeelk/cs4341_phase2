@@ -28,9 +28,23 @@ def main(initdata=None):
 
     pop_score, shap = regressor.predict_query(data)
 
-    print(data)
-    print(pop_score)
-    return pop_score
+    index_map = {0: "Short Float", 1: "Short Ratio", 2: "Short Interest", 3: "Relative Volume",
+                 4: "Change", 5: "Weekly Volatility", 6: "Monthly Volatility", 7: "ATR (14)",
+                   8: "Recent Google Intrest", 9: "Average Google Iterest", 10: "Google Interest Momentum"}
+
+    i = np.argsort(np.array(shap))
+
+
+    drivers = [index_map[index] for index in list(i[0][:3])]
+
+    nlp = SentimentClassifier()
+
+
+    label = nlp.predict_posts(posts)
+
+    print(f'The popularity score for {ticker} is {pop_score}/100.\nThe top popularity drivers are {", ".join(drivers)}.\nThe quality of hype surrounding this stock is {label}')
+
+    return pop_score, drivers, label
 
 
 
@@ -55,7 +69,7 @@ def PYapp():
     if ticker is None or len(ticker) > 4:
         return 400
     else:
-        result = main(ticker)
+        result, drivers, label = main(ticker)
 
     print(result)
 
