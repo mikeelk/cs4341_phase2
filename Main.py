@@ -30,6 +30,7 @@ def main(initdata=None):
 
     print(data)
     print(pop_score)
+    return pop_score
 
 
 
