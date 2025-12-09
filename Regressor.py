@@ -55,9 +55,10 @@ class Regressor:
             #predict on test
             y_pred = model.predict(X_test, num_iteration=model.best_iteration)
         
-            # #metrics
-            # rmse.append(np.sqrt(mean_squared_error(y_test, y_pred)))
-            # r2.append(r2_score(y_test, y_pred))
+            #metrics
+            rmse.append(np.sqrt(mean_squared_error(y_test, y_pred)))
+            r2.append(r2_score(y_test, y_pred))
+
 
         return model
     

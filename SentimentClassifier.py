@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-import joblib
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 class SentimentClassifier:
 
@@ -44,7 +44,11 @@ class SentimentClassifier:
 
         y_pred = pipe.predict(X_test)
 
-        # acc = accuracy_score(y_test, y_pred)
+        acc =accuracy_score(y_test, y_pred)
+        p = precision_score(y_test, y_pred)
+        r = recall_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred)
+        cm = confusion_matrix(y_test, y_pred)
 
         return pipe
 
