@@ -48,8 +48,8 @@ def main(initdata=None):
 
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
 app = Flask(__name__)
 
