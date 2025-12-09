@@ -24,7 +24,7 @@ class DataFetcher:
         one_month_ago = (datetime.today() - timedelta(days=31)).strftime("%Y-%m-%d")
 
         
-        pytrends.build_payload(kw_list, cat=0, timeframe=' '.join([one_month_ago, yesterday]), geo='', gprop='') 
+        pytrends.build_payload(kw_list, cat=0, timeframe=' '.join([one_month_ago, yesterday]), geo='US', gprop='') 
         
         data = pytrends.interest_over_time()
         
