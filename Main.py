@@ -1,6 +1,7 @@
 from DataFetcher import *
 from DataParser import *
 from Regressor import *
+from SentimentClassifier import *
 from flask import Flask, request, jsonify
 
 
@@ -16,18 +17,20 @@ def main(initdata=None):
     
     finviz = fetcher.fetch_finviz()
     trends = fetcher.fetch_trends()
+    reddit = fetcher.fetch_reddit()
 
     parser = DataParser()
 
+    posts = parser.extract_posts(reddit)
     data = parser.clean_numerical_data(finviz, trends, ticker)
 
     regressor = Regressor()
 
-    pop_score, rmse, r2 = regressor.predict_query(data)
+    pop_score, shap = regressor.predict_query(data)
 
     print(data)
-    print("score", pop_score)
-    return pop_score
+    print(pop_score)
+
 
 
 # if __name__ == "__main__":

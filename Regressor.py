@@ -2,6 +2,7 @@ import lightgbm as lgb
 import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error, r2_score
+import shap
 
 
 class Regressor:
@@ -14,7 +15,6 @@ class Regressor:
         #extract rows and output column
         x = np.delete(data, -1, axis=1)
         y = data[:, -1]
-        y = np.clip(y, 20, 60) #remove outliers
 
 
         #init model
@@ -22,8 +22,8 @@ class Regressor:
             "objective": "regression",
             "metric": "rmse",
             "learning_rate": 0.02,
-            "num_leaves": 12,
-            "max_depth":4,
+            "num_leaves": 11,
+            "max_depth":10,
             "feature_fraction": 0.7,
             "bagging_fraction": 0.7,
             "bagging_freq": 1,
@@ -55,21 +55,25 @@ class Regressor:
             #predict on test
             y_pred = model.predict(X_test, num_iteration=model.best_iteration)
         
-            #metrics
-            rmse.append(np.sqrt(mean_squared_error(y_test, y_pred)))
-            r2.append(r2_score(y_test, y_pred))
+            # #metrics
+            # rmse.append(np.sqrt(mean_squared_error(y_test, y_pred)))
+            # r2.append(r2_score(y_test, y_pred))
 
-        print(np.std(y))
-        return np.mean(rmse), np.mean(r2), model
+        return model
     
 
     def predict_query(self, data):
 
-        rsme,r2,model = self.train_model()
+        model = self.train_model()
 
         query = np.array([data])
 
         prediction = model.predict(query)
 
-        return round(prediction[0],1), rsme, r2
+
+        explainer = shap.TreeExplainer(model)
+
+        shap_values = explainer(query)
+
+        return round(prediction[0],1), shap_values.values
 
