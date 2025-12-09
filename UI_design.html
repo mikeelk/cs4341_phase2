@@ -40,19 +40,6 @@
       gap:12px;
       align-items:center;
     }
-    .logo{
-      width:56px;
-      height:56px;
-      border-radius:12px;
-      background:linear-gradient(135deg,var(--accent),var(--accent-2));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:700;
-      color:#042a3b;
-      box-shadow:0 6px 18px rgba(0,0,0,0.6);
-      font-size:20px;
-    }
     h1{
       font-size:20px;
       margin:0;
@@ -147,11 +134,11 @@
       display:inline-block;
       padding:4px 9px;
       border-radius:999px;
-      background:rgba(255,255,255,0.04);
+      background:rgba(255,255,255,0.05);
       font-weight:600;
       font-size:12px;
       color:var(--muted);
-      margin-left:6px;
+      margin-left:2px;
     }
     @media (max-width:600px){
       .big-score{
@@ -175,7 +162,8 @@
     <div class="controls">
       <div class="search-box card">
         <label style="font-size:12px;color:var(--muted);min-width:36px;">Symbol</label>
-        <input id="symbolInput" placeholder="e.g., NVDA or TSLA" value="NVDA" />
+        <!-- no default value now -->
+        <input id="symbolInput" placeholder="e.g., NVDA or TSLA" value="" />
         <button id="analyzeBtn" class="btn">Analyze</button>
       </div>
     </div>
@@ -184,7 +172,8 @@
       <div class="big-score">
         <div id="meter" class="meter">--</div>
         <div class="score-meta">
-          <h2 id="stockTitle">NVDA</h2>
+          <!-- no default symbol now -->
+          <h2 id="stockTitle">—</h2>
           <p id="scoreText">
             Popularity Score
             <span class="badge" id="scoreBadge">—</span>
@@ -192,6 +181,16 @@
           <p class="small" id="scoreDesc">
             Enter a symbol and press Analyze to compute the popularity score (0–100).
           </p>
+
+          <!-- LABEL -->
+          <p class="small" id="labelLine">
+            Signal type:
+            <span id="labelPill" class="badge">—</span>
+          </p>
+
+          <!-- DRIVERS -->
+          <p class="small" style="margin-top:4px;">Top drivers:</p>
+          <ul id="driversList" class="small" style="margin:4px 0 0 0; padding-left:18px;"></ul>
         </div>
       </div>
     </div>
@@ -203,30 +202,86 @@
       const badge = document.getElementById('scoreBadge');
       const desc = document.getElementById('scoreDesc');
 
-      const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : 0;
+      const hasScore = Number.isFinite(score);
+      const safeScore = hasScore ? Math.max(0, Math.min(100, Math.round(score))) : 0;
 
-      meter.textContent = safeScore;
-      badge.textContent = safeScore;
+      meter.textContent = hasScore ? safeScore : '--';
+      badge.textContent = hasScore ? safeScore : '—';
 
-      let color;
-      if (safeScore > 65) {
-        color = 'var(--good)';
-        desc.textContent = 'Strong popularity — likely driven by genuine, sustained attention.';
-      } else if (safeScore < 40) {
-        color = 'var(--bad)';
-        desc.textContent = 'Low or noisy popularity — could be short-lived hype or weak interest.';
+      let color = 'var(--accent)';
+
+      if (hasScore) {
+        if (safeScore > 65) {
+          color = 'var(--good)';
+          desc.textContent = 'Strong popularity — likely driven by genuine, sustained attention.';
+        } else if (safeScore < 40) {
+          color = 'var(--bad)';
+          desc.textContent = 'Low or noisy popularity — could be short-lived hype or weak interest.';
+        } else {
+          color = 'var(--accent)';
+          desc.textContent = 'Moderate popularity — mixed signals, worth a deeper look at the drivers.';
+        }
       } else {
-        color = 'var(--accent)';
-        desc.textContent = 'Moderate popularity — mixed signals, worth a deeper look at the drivers.';
+        desc.textContent = 'Enter a symbol and press Analyze to compute the popularity score (0–100).';
       }
 
       meter.style.background =
-        `conic-gradient(${color} 0% ${safeScore}%, rgba(255,255,255,0.06) ${safeScore}% 100%)`;
+        hasScore
+          ? `conic-gradient(${color} 0% ${safeScore}%, rgba(255,255,255,0.06) ${safeScore}% 100%)`
+          : `conic-gradient(var(--accent) 0% 55%, rgba(255,255,255,0.06) 55% 100%)`;
+    }
+
+    function renderDetails(label, drivers) {
+      const labelPill = document.getElementById('labelPill');
+      const driversList = document.getElementById('driversList');
+
+      // ----- Label pill -----
+      if (labelPill) {
+        const raw = typeof label === 'string' ? label.trim() : '';
+        const normalized = raw.toLowerCase();
+        let bg = 'var(--accent)';
+        let textColor = '#020617';
+
+        if (normalized.includes('genuine')) {
+          bg = 'var(--good)';
+        } else if (normalized.includes('speculative')) {
+          bg = 'var(--bad)';
+        }
+
+        labelPill.textContent = raw || '—';
+        labelPill.style.background = bg;
+        labelPill.style.color = textColor;
+      }
+
+      // ----- Drivers list -----
+      if (driversList) {
+        driversList.innerHTML = '';
+
+        if (Array.isArray(drivers) && drivers.length > 0) {
+          drivers.slice(0, 3).forEach(d => {
+            const li = document.createElement('li');
+            li.textContent = d;
+            driversList.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = '—';
+          driversList.appendChild(li);
+        }
+      }
     }
 
     async function analyzeSymbol(sym){
-      const s = (sym || 'NVDA').toUpperCase().trim();
-      document.getElementById('stockTitle').textContent = s;
+      const s = (sym || '').toUpperCase().trim();
+      const title = document.getElementById('stockTitle');
+      title.textContent = s || '—';
+
+      if (!s) {
+        // no symbol entered
+        renderMeter(null);
+        renderDetails(null, []);
+        return;
+      }
 
       try {
         const res = await fetch('http://127.0.0.1:5000/PYapp', {
@@ -236,8 +291,8 @@
         });
 
         if (!res.ok) {
-          console.error('Backend error status:', res.status);
-          renderMeter(0);
+          renderMeter(null);
+          renderDetails(null, []);
           document.getElementById('scoreDesc').textContent =
             'Error from backend (status ' + res.status + ').';
           return;
@@ -246,11 +301,17 @@
         const data = await res.json();
         console.log('Python response:', data);
 
-        const score = data.score; // your Flask returns: jsonify({"score": result})
+        const score = data.score;
+        const drivers = data.drivers;
+        const label = data.label;
+
         renderMeter(score);
+        renderDetails(label, drivers);
+
       } catch (err) {
         console.error('Fetch failed:', err);
-        renderMeter(0);
+        renderMeter(null);
+        renderDetails(null, []);
         document.getElementById('scoreDesc').textContent =
           'Could not reach backend. Check that the Python server is running.';
       }
@@ -261,7 +322,8 @@
       analyzeSymbol(val);
     });
 
-    analyzeSymbol(document.getElementById('symbolInput').value);
+    // NOTE: no auto-call here anymore
+    // analyzeSymbol(document.getElementById('symbolInput').value);
   </script>
 </body>
 </html>

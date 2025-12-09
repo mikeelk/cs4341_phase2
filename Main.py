@@ -73,7 +73,7 @@ def PYapp():
 
     print(result)
 
-    return jsonify({"score": result})
+    return jsonify({"score": result, "drivers": drivers, "label": label})
 
 
 app.run(debug=True)
